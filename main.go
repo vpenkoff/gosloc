@@ -38,30 +38,42 @@ func countLines(fileName string) int {
 	}
 
 	if fileMode.IsRegular() {
-		linesCount, err := getLinesCount(fileName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("%s: %d\n", fileName, linesCount)
-		totalLines += linesCount
+		lines := getLinesCountRegularFile(fileName)
+		totalLines += lines
 	}
 
 	if fileMode.IsDir() {
-		dir, err := os.Open(fileName)
-		if err != nil {
-			log.Fatal(err)
-		}
+		lines := getLinesCountDir(fileName)
+		totalLines += lines
+	}
+	return totalLines
+}
 
-		dir_entries, err := dir.Readdirnames(-1)
-		if err != nil {
-			log.Fatal(err)
-		}
+func getLinesCountRegularFile(fileName string) int {
+	linesCount, err := getLinesCount(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s: %d\n", fileName, linesCount)
+	return linesCount
+}
 
-		for _, fileInDir := range dir_entries {
-			fileNameInDir := path.Join(fileName, fileInDir)
-			linesCount := countLines(fileNameInDir)
-			totalLines += linesCount
-		}
+func getLinesCountDir(dirName string) int {
+	totalLines := 0
+	dir, err := os.Open(dirName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dirEntries, err := dir.Readdirnames(-1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, fileInDir := range dirEntries {
+		fileNameInDir := path.Join(dirName, fileInDir)
+		linesCount := countLines(fileNameInDir)
+		totalLines += linesCount
 	}
 	return totalLines
 }
