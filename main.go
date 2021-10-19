@@ -9,16 +9,20 @@ import (
 )
 
 const CWD = "."
+const ZERO_LINES_COUNT = 0
 
 func main() {
-	args := os.Args[1:]
+	files := os.Args[1:]
 
-	if len(args) == 0 {
-		args = append(args, CWD)
+	if len(files) == 0 {
+		files = append(files, CWD)
 	}
 
-	fileName := args[0]
-	total := countLines(fileName)
+	total := 0
+	for _, file := range files {
+		lines := countLines(file)
+		total += lines
+	}
 	fmt.Printf("total: %d\n", total)
 }
 
@@ -28,14 +32,14 @@ func countLines(fileName string) int {
 	fi, err := os.Lstat(fileName)
 	if err != nil {
 		fmt.Printf("[Error] stat: %s\n", err)
-		return 0
+		return ZERO_LINES_COUNT
 	}
 
 	fileMode := fi.Mode()
 
 	if (fileMode&fs.ModeSymlink != 0) || (fileMode&fs.ModeNamedPipe != 0) {
 		fmt.Printf("[Error] %s not a file, skipping...\n", fileName)
-		return 0
+		return ZERO_LINES_COUNT
 	}
 
 	if fileMode.IsRegular() {
@@ -54,7 +58,7 @@ func getLinesCountRegularFile(fileName string) int {
 	linesCount, err := getLinesCount(fileName)
 	if err != nil {
 		fmt.Printf("[Error] %s\n", err)
-		return 0
+		return ZERO_LINES_COUNT
 	}
 	fmt.Printf("%s: %d\n", fileName, linesCount)
 	return linesCount
@@ -65,13 +69,13 @@ func getLinesCountDir(dirName string) int {
 	dir, err := os.Open(dirName)
 	if err != nil {
 		fmt.Printf("[Error] os: %s\n", err)
-		return 0
+		return ZERO_LINES_COUNT
 	}
 
 	dirEntries, err := dir.Readdirnames(-1)
 	if err != nil {
 		fmt.Printf("[Error] %s\n", err)
-		return 0
+		return ZERO_LINES_COUNT
 	}
 
 	for _, fileInDir := range dirEntries {
@@ -85,7 +89,7 @@ func getLinesCountDir(dirName string) int {
 func getLinesCount(fileName string) (int, error) {
 	fileContent, err := os.ReadFile(fileName)
 	if err != nil {
-		return -1, err
+		return ZERO_LINES_COUNT, err
 	}
 
 	lines := bytes.Count(fileContent, []byte("\n"))
